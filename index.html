@@ -1,0 +1,249 @@
+# grambajar2
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GramBazar | गाँव का अपना बाजार</title>
+<style>
+:root{--green:#16834a;--dark:#105d36;--light:#eff9f1;--orange:#ffb443}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7f4;color:#17251b}
+header{background:var(--green);color:white;padding:17px 5%;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-size:25px;font-weight:900}
+.logo span{color:#ffe08a}
+header p{margin:5px 0 0;font-size:12px}
+.cartbtn{border:0;background:white;color:var(--dark);padding:12px 15px;border-radius:12px;font-weight:bold;cursor:pointer}
+.hero{padding:30px 5%;background:linear-gradient(110deg,#dff7df,#f9ffea)}
+.hero h1{font-size:clamp(27px,5vw,44px);margin:0 0 10px;color:#135c32}
+.hero p{line-height:1.6}
+.search{width:100%;max-width:600px;padding:14px;border:1px solid #cbd8cc;border-radius:12px;font-size:16px;background:white}
+.categories{display:flex;gap:9px;overflow-x:auto;padding:17px 5%}
+.cat{white-space:nowrap;padding:10px 15px;border:1px solid #dce6dd;border-radius:30px;background:white;cursor:pointer}
+.cat.active{background:var(--green);color:white}
+main{padding:5px 5% 35px}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.product{background:white;border-radius:16px;padding:12px;box-shadow:0 3px 14px #173d1710;border:1px solid #e7ece7}
+.photo{height:125px;background:#f0f7ed;border-radius:12px;display:grid;place-items:center;font-size:65px}
+.product h3{font-size:16px;margin:12px 0 5px}
+.muted{font-size:12px;color:#6d796e}
+.price{font-size:19px;font-weight:bold;color:var(--green);margin:10px 0}
+.add{background:var(--green);color:white;border:0;border-radius:9px;padding:11px;width:100%;font-weight:bold;cursor:pointer}
+.add:active,.pay:active{transform:scale(.98)}
+.offer{margin:20px 0;background:#fff4d8;padding:16px;border-radius:13px;line-height:1.6}
+footer{text-align:center;padding:25px;background:#123c29;color:white;line-height:1.8}
+.modal{position:fixed;inset:0;background:#0008;z-index:5;display:none;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:550px;max-height:90dvh;overflow:auto;background:white;border-radius:22px 22px 0 0;padding:20px}
+.sheet h2{margin-top:0}
+.close{float:right;background:#eee;border:0;border-radius:9px;padding:9px;cursor:pointer}
+.cartrow{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #eee;padding:12px 0}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{border:0;border-radius:6px;padding:6px 10px;background:#e8f5e9}
+.field{width:100%;padding:13px;border:1px solid #d5dfd5;border-radius:10px;margin:6px 0 12px;font-size:15px}
+.pay{width:100%;padding:14px;border:0;border-radius:11px;background:#16834a;color:white;font-size:16px;font-weight:bold;cursor:pointer;margin-top:9px}
+.upibtn{background:#edf5ff;color:#124b83}
+.note{font-size:12px;color:#68736a;line-height:1.5}
+.empty{text-align:center;padding:25px;color:#667}
+@media(min-width:650px){.products{grid-template-columns:repeat(3,minmax(0,1fr))}.photo{height:160px}.modal{align-items:center}.sheet{border-radius:20px}}
+@media(min-width:1000px){.products{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+
+<header>
+ <div>
+  <div class="logo">🌿 Gram<span>Bazar</span></div>
+  <p>गाँव का अपना बाजार · अपने लोगों से खरीदें</p>
+ </div>
+ <button class="cartbtn" onclick="openCart()">🛒 कार्ट (<span id="count">0</span>)</button>
+</header>
+
+<section class="hero">
+ <h1>आपका अपना गाँव का बाजार! 🌾</h1>
+ <p>ताज़ा सब्जियाँ, फल और रोज़मर्रा का सामान — एक ही जगह।</p>
+ <input class="search" id="search" placeholder="🔎 सामान खोजें..." oninput="render()">
+</section>
+
+<nav class="categories" id="categories"></nav>
+
+<main>
+ <div class="section-title">
+  <h2>🛍️ आज का बाजार</h2>
+  <span class="muted">उदाहरण कीमतें</span>
+ </div>
+ <div class="products" id="products"></div>
+ <div class="offer">
+  <b>💚 स्थानीय दुकानदारों का साथ दें</b><br>
+  अपना सामान स्थानीय किसानों और दुकानदारों से खरीदें। ऑर्डर WhatsApp पर भेजें।
+ </div>
+</main>
+
+<footer>
+ <b>🌿 GramBazar</b><br>
+ गाँव का बाजार, अब आपके मोबाइल पर।<br>
+ <small>यह डेमो वेबसाइट है। कीमतें और उत्पाद अपनी दुकान के अनुसार बदलें।</small>
+</footer>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeCart()">
+ <section class="sheet">
+  <button class="close" onclick="closeCart()">✕ बंद करें</button>
+  <h2>🛒 आपका ऑर्डर</h2>
+  <div id="cartItems"></div>
+  <h3>कुल: ₹<span id="total">0</span></h3>
+
+  <h3>📍 डिलीवरी की जानकारी</h3>
+  <form id="orderForm">
+   <label>आपका नाम</label>
+   <input class="field" id="customer" placeholder="पूरा नाम" required>
+   <label>मोबाइल नंबर</label>
+   <input class="field" id="phone" type="tel" inputmode="numeric" pattern="[0-9]{10}" placeholder="10 अंकों का मोबाइल नंबर" required>
+   <label>गाँव और पूरा पता</label>
+   <textarea class="field" id="address" placeholder="गाँव, तहसील, जिला और घर का पता" required></textarea>
+   <label>पेमेंट का तरीका</label>
+   <select class="field" id="payment">
+    <option value="COD">कैश ऑन डिलीवरी (दुकानदार से पुष्टि करें)</option>
+    <option value="UPI">UPI / QR पेमेंट</option>
+   </select>
+   <button class="pay" type="submit">💬 WhatsApp पर ऑर्डर भेजें</button>
+  </form>
+
+  <button class="pay upibtn" onclick="payUPI()">₹ UPI ऐप से पेमेंट करें</button>
+  <p class="note">UPI भुगतान तभी चुनें जब दुकानदार की सही UPI ID कॉन्फ़िगर की गई हो। पेमेंट सफल होने की पुष्टि UPI ऐप या बैंक से करें। यह वेबसाइट अपने-आप पेमेंट सत्यापित नहीं करती।</p>
+ </section>
+</div>
+
+<script>
+// ===== अपनी दुकान की जानकारी यहाँ भरें =====
+const SHOP={
+ whatsapp:"919876543210",  // दुकानदार का WhatsApp नंबर: देश कोड सहित, + के बिना
+ upi:"yourshop@upi",        // दुकानदार की असली UPI ID डालें
+ name:"GramBazar",
+ currency:"INR"
+};
+
+// डेमो प्रोडक्ट: नाम, कीमत, यूनिट, इमोजी और कैटेगरी
+const products=[
+ {id:1,name:"ताज़े टमाटर",price:30,unit:"1 kg",emoji:"🍅",cat:"सब्जियाँ"},
+ {id:2,name:"आलू",price:25,unit:"1 kg",emoji:"🥔",cat:"सब्जियाँ"},
+ {id:3,name:"प्याज़",price:35,unit:"1 kg",emoji:"🧅",cat:"सब्जियाँ"},
+ {id:4,name:"हरी मिर्च",price:20,unit:"250 g",emoji:"🌶️",cat:"सब्जियाँ"},
+ {id:5,name:"ताज़े सेब",price:120,unit:"1 kg",emoji:"🍎",cat:"फल"},
+ {id:6,name:"केले",price:50,unit:"दर्जन",emoji:"🍌",cat:"फल"},
+ {id:7,name:"आम",price:80,unit:"1 kg",emoji:"🥭",cat:"फल"},
+ {id:8,name:"संतरे",price:70,unit:"1 kg",emoji:"🍊",cat:"फल"},
+ {id:9,name:"गेहूँ",price:35,unit:"1 kg",emoji:"🌾",cat:"अनाज"},
+ {id:10,name:"चावल",price:55,unit:"1 kg",emoji:"🍚",cat:"अनाज"},
+ {id:11,name:"दाल",price:100,unit:"1 kg",emoji:"🫘",cat:"अनाज"},
+ {id:12,name:"दूध",price:32,unit:"500 ml",emoji:"🥛",cat:"डेयरी"},
+ {id:13,name:"ब्रेड",price:40,unit:"पैक",emoji:"🍞",cat:"किराना"},
+ {id:14,name:"खाने का तेल",price:145,unit:"1 L",emoji:"🫗",cat:"किराना"},
+ {id:15,name:"बिस्कुट",price:20,unit:"पैक",emoji:"🍪",cat:"किराना"},
+ {id:16,name:"चीनी",price:45,unit:"1 kg",emoji:"🧂",cat:"किराना"}
+];
+
+let cart={};
+let category="सभी";
+
+function renderCategories(){
+ const cats=["सभी",...new Set(products.map(p=>p.cat))];
+ document.getElementById("categories").innerHTML=cats.map(c=>
+  `<button class="cat ${c===category?"active":""}" onclick="setCat(${JSON.stringify(c)})">${c}</button>`
+ ).join("");
+}
+function setCat(c){category=c;renderCategories();render()}
+function render(){
+ const q=document.getElementById("search").value.trim().toLowerCase();
+ const list=products.filter(p=>(category==="सभी"||p.cat===category)&&p.name.toLowerCase().includes(q));
+ document.getElementById("products").innerHTML=list.length?list.map(p=>`
+ <article class="product">
+  <div class="photo">${p.emoji}</div>
+  <h3>${p.name}</h3>
+  <div class="muted">${p.unit} · ${p.cat}</div>
+  <div class="price">₹${p.price}</div>
+  <button class="add" onclick="add(${p.id})">＋ कार्ट में जोड़ें</button>
+ </article>`).join(""):`<div class="empty">कोई सामान नहीं मिला।</div>`;
+}
+function add(id){cart[id]=(cart[id]||0)+1;updateCount()}
+function updateCount(){
+ document.getElementById("count").textContent=Object.values(cart).reduce((a,b)=>a+b,0);
+}
+function total(){return products.reduce((s,p)=>s+p.price*(cart[p.id]||0),0)}
+function openCart(){
+ document.getElementById("modal").style.display="flex";
+ showCart();
+}
+function closeCart(){document.getElementById("modal").style.display="none"}
+function change(id,n){
+ cart[id]=(cart[id]||0)+n;
+ if(cart[id]<=0)delete cart[id];
+ updateCount();showCart();
+}
+function showCart(){
+ const items=products.filter(p=>cart[p.id]);
+ document.getElementById("cartItems").innerHTML=items.length?items.map(p=>`
+ <div class="cartrow">
+  <div>${p.emoji} <b>${p.name}</b><br><small>₹${p.price} × ${cart[p.id]}</small></div>
+  <div class="qty">
+   <button onclick="change(${p.id},-1)">−</button>
+   ${cart[p.id]}
+   <button onclick="change(${p.id},1)">+</button>
+  </div>
+ </div>`).join(""):`<div class="empty">आपका कार्ट खाली है। पहले सामान जोड़ें।</div>`;
+ document.getElementById("total").textContent=total();
+}
+
+function getOrder(){
+ const items=products.filter(p=>cart[p.id]);
+ return items.map(p=>`${p.name} (${p.unit}) x ${cart[p.id]} = ₹${p.price*cart[p.id]}`).join("\n");
+}
+function validShop(){
+ if(!/^\d{10,15}$/.test(SHOP.whatsapp)){
+  alert("कोड में दुकानदार का सही WhatsApp नंबर सेट करें।");
+  return false;
+ }
+ return true;
+}
+function validCart(){
+ if(!Object.values(cart).some(n=>n>0)){
+  alert("पहले कार्ट में सामान जोड़ें।");return false;
+ }
+ return true;
+}
+document.getElementById("orderForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ if(!validCart()||!validShop())return;
+ const name=document.getElementById("customer").value.trim();
+ const phone=document.getElementById("phone").value.trim();
+ const address=document.getElementById("address").value.trim();
+ const method=document.getElementById("payment").value;
+ const message=
+ `🌿 ${SHOP.name} - नया ऑर्डर\n\n`+
+ `ग्राहक: ${name}\nमोबाइल: ${phone}\nपता: ${address}\n\n`+
+ `सामान:\n${getOrder()}\n\nकुल: ₹${total()}\n`+
+ `पेमेंट तरीका: ${method==="UPI"?"UPI (भुगतान की पुष्टि आवश्यक)":"Cash on Delivery"}\n\n`+
+ `कृपया ऑर्डर और डिलीवरी की पुष्टि करें।`;
+ window.open("https://wa.me/"+SHOP.whatsapp+"?text="+encodeURIComponent(message),"_blank");
+});
+
+function payUPI(){
+ if(!validCart())return;
+ if(!/^[\w.-]+@[\w.-]+$/.test(SHOP.upi)||SHOP.upi==="yourshop@upi"){
+  alert("पहले कोड में दुकानदार की असली UPI ID डालें।");return;
+ }
+ const name=document.getElementById("customer").value.trim();
+ if(!name){
+  alert("पहले अपना नाम भरें।");return;
+ }
+ const url="upi://pay?pa="+encodeURIComponent(SHOP.upi)+
+ "&pn="+encodeURIComponent(SHOP.name)+
+ "&am="+total().toFixed(2)+"&cu=INR"+
+ "&tn="+encodeURIComponent("GramBazar order");
+ window.location.href=url;
+}
+renderCategories();
+render();
+</script>
+</body>
+</html>
